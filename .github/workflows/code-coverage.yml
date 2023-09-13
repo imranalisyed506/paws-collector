@@ -18,4 +18,5 @@ jobs:
 
     - name: make test-all
       run: |
+        npm ci
         make test-all
