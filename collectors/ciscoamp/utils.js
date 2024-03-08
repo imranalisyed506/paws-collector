@@ -17,7 +17,7 @@ function getAPILogs(baseUrl, authorization, apiUrl, state, accumulator, maxPages
             if (pageCount < maxPagesPerInvocation) {
                 return restServiceClient.get(apiUrl, {
                     headers: {
-                        "authorization": `Basic ${authorization}`
+                        "X-Cisco-Meraki-API-Key": `${authorization}`
                     },
                     resolveWithFullResponse: true
                 }).then((body) => {

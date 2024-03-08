@@ -1,0 +1,51 @@
+{
+    "configurations": [
+        {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "index.handler (nodejs18.x)",
+            "invokeTarget": {
+                "target": "code",
+                "projectRoot": "${workspaceFolder}/collectors/ciscomeraki",
+                "lambdaHandler": "index.handler",
+                "architecture": "arm64"
+            },  
+            "lambda": {
+                "runtime": "nodejs18.x",
+                "payload": {
+                    "path": "/Users/imransyed/Downloads/projects/oct30/paws-collector/collectors/ciscomeraki/local/events/event_poll.json"
+                },
+                "environmentVariables": {
+                    "aims_secret_key": "AQICAHjlhSVovn24OSDcmhGry5nRed/kDWrYcnOrU4cmz7x6AAHdncgyD9yberbHLHqoLss/AAAAojCBnwYJKoZIhvcNAQcGoIGRMIGOAgEAMIGIBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDPofnF37hulSa0G96gIBEIBbYqwzUbNu+Mpyl5pXYrJ+UkB4rmNq+v0lG7ElFt79u7J33EGoqd327f4FMCQud3GjfAlcYj43Wkrhtme0o8H+yRefDojsrm/AwLORM8GWpb2vu7bcjOLga5X6Jw==",
+                    "aims_access_key_id": "395ea14482f0f990",
+                    "KeyId": "arn:aws:kms:us-east-1:352283894008:key/c31cd559-a589-417b-91bb-19bfbcba903f",
+                    "LOG_LEVEL": "debug",
+                    "al_api": "api.product.dev.alertlogic.com",
+                    "stack_name": "ciscomeraki-test",
+                    "azcollect_api": "api.product.dev.alertlogic.com",
+                    "ingest_api": "api.global-integration.us-west-2.product.dev.alertlogic.com",
+                    "collector_status_api": "api.product.dev.alertlogic.com",
+                    "DEBUG": "*",
+                    "paws_state_queue_arn" :"arn:aws:sqs:us-east-1:352283894008:paws-state-queue",
+                    "paws_state_queue_url" :"https://sqs.us-east-1.amazonaws.com/352283894008/paws-state-queue",
+                    "paws_poll_interval": "900",
+                    "paws_extension": "ciscomeraki",
+                    "paws_collector_param_string_1": "",
+                    "collector_streams": "[\"security_events\",\"flows\",\"urls\"]",  
+                    "paws_api_client_id":"imrantech506a@gmail.com",
+                    "paws_api_secret": "im-cm-param1",
+                    "paws_collector_param_string_2":"549236",
+                    "paws_endpoint":"https://api.meraki.com/api/v1",
+                    "sample-custom-var": "https://some-endpoint.com/",
+                    "collector_id": "79BA72C3-20EA-494B-8123-587B20A51F4A",
+                    "paws_type_name": "ciscomeraki",
+                    "customer_id": "134224120",
+                    "paws_max_pages_per_invocation": 10,
+                    "ssm_direct":true,
+                    "paws_secret_param_name": "im-cm-param1",
+                    "paws_ddb_table_name":"PawsCollectorStates"
+                  }
+            }
+        }
+    ]
+}

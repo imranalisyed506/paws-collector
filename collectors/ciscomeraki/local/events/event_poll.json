@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "90f9b6bd-540f-4718-a05b-082328c318e7",
+      "receiptHandle": "AQEB78LmKaaZ+uj8DVnc/O2zQcAe+qKSi3ZGTSBFssIRSmpwwzUEi2vhPTaIBnhOoh0aoRxVjWdoXO3ZloINfMxmcjycP3KC0WXwcWokoOc3iMCdqhYg0NcOhQW1X0ixc79C9/5/XF1xGd79vLhFL7KvRjjiT4sOaSxlAv6v2fJ5eDETnp7CRa5pocCF4EO2su0M4/TnlLreGfsY+C+/tH+r19AM+d3Jt5dbNMrKMWRRZ7/PTjczkIM7U38AHPuusuBz9uzA5yMQGOMI8FPXfqgcafEN17JqKuNSd/l54v1+s9rBQSzL/MH9wZ0XpZditcpe5pTc+dGuRHOXbFK2A0YUQCvRq1Ed8tfr68uELTQK5jWHH/zPnEMWsTyco9VuNCKr",
+      "body": "{\n  \"priv_collector_state\": {\n    \"since\": \"2024-02-07T05:00:42.740Z\",\n    \"until\": \"2023-03-13T13:35:42.740Z\",\n  \"nextPage\": null,\n   \"stream\": \"networkSecurityEvents\",\n   \"poll_interval_sec\": 900,\n \"apiQuotaResetDate\": \"2023-07-07T06:27:42.740Z\"  }\n}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1574159909907",
+        "SenderId": "some-id",
+        "ApproximateFirstReceiveTimestamp": "1574159909968"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "1845296051d4cfe2e6175358a065cc38",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:352283894008:paws-state-queue",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}
