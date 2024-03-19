@@ -12,7 +12,7 @@ Resources:
           AWS_LAMBDA_FUNCTION_NAME:
           aims_secret_key:
           LOG_LEVEL:
-          DEBUG:
+          # DEBUG:
           aims_access_key_id:
           al_api:
           stack_name:
@@ -38,7 +38,7 @@ Resources:
           ssm_direct:
           collector_status_api:
           secret: 
-      CodeUri: /Users/imransyed/Downloads/projects/jan2024/paws-collector/collectors/ciscomeraki
+      CodeUri: /Users/imransyed/Downloads/projects/march22024/paws-collector/collectors/ciscomeraki
       Runtime: nodejs18.x
       Handler: index.handler
       Timeout: 300 

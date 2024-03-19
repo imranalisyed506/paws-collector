@@ -17,13 +17,9 @@ const calcNextCollectionInterval = require('@alertlogic/paws-collector').calcNex
 const utils = require("./utils");
 const AlLogger = require('@alertlogic/al-aws-collector-js').Logger;
 
-let typeIdPaths = [
-    // enter your type paths in the form { path: ['myKey'] }
-];
+let typeIdPaths = [];
 
-let tsPaths = [
-    // enter your timestamp paths in the form { path: ['myKey'] }
-];
+let tsPaths = [];
 
 
 class CiscomerakiCollector extends PawsCollector {
@@ -43,21 +39,11 @@ class CiscomerakiCollector extends PawsCollector {
             since: startTs,
             until: endTs,
             nextPage: null,
-            apiQuotaResetDate: null,
-            totalLogsCount: 0,
             poll_interval_sec: 1
         }));
         return callback(null, initialStates, 1);
     }
     
-    // pawsGetLogs(state, callback) {
-    //     let collector = this;
-    //     console.info(`CMRI000001 Collecting data from ${state.since} till ${state.until}`);
-    //     const newState = collector._getNextCollectionState(state);
-    //     console.info(`CMRI000002 Next collection in ${newState.poll_interval_sec} seconds`);
-    //     return callback(null, [], newState, newState.poll_interval_sec);
-    // }
-
     pawsGetLogs(state, callback) {
         // This code can remove once exsisting code set stream and collector_streams env variable
         if (!process.env.collector_streams) {
@@ -74,10 +60,6 @@ class CiscomerakiCollector extends PawsCollector {
             return callback("The Client Secret was not found!");
         }
 
-        // const clientId = collector.clientId;
-        // if (!clientId) {
-        //     return callback("The Client ID was not found!");
-        // }
 
         const apiEndpoint = process.env.paws_endpoint.replace(/^https:\/\/|\/$/g, '');
         const orgKey = process.env.paws_collector_param_string_2;
@@ -97,6 +79,7 @@ class CiscomerakiCollector extends PawsCollector {
                 let newState;
                 if (nextPage === undefined) {
                     newState = this._getNextCollectionState(state);
+                    AlLogger.info(`CMRI000002 newState  ${JSON.stringify(newState)}`);
                 } else {
                     newState = this._getNextCollectionStateWithNextPage(state, nextPage);
                 }
@@ -110,7 +93,6 @@ class CiscomerakiCollector extends PawsCollector {
                     return callback(error.response.data);
                 }
                 else {
-                    error.errorCode = error;
                     return callback(error);
                 }
             });
@@ -134,6 +116,7 @@ class CiscomerakiCollector extends PawsCollector {
     }
 
     _getNextCollectionStateWithNextPage({ stream, since, until }, nextPage) {
+        console.log('_getNextCollectionStateWithNextPage since: ', since, 'until: ', until);
         return {
             stream,
             since,
@@ -175,8 +158,6 @@ class CiscomerakiCollector extends PawsCollector {
             since: curState.since,
             until: curState.until,
             nextPage: curState.nextPage,
-            apiQuotaResetDate: curState.apiQuotaResetDate,
-            totalLogsCount: curState.totalLogsCount,
             poll_interval_sec: curState.poll_interval_sec
         };
     }
