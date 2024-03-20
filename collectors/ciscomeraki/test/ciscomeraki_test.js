@@ -1,12 +1,12 @@
 // const assert = require('assert');
-// // const sinon = require('sinon');
-// // var AWS = require('aws-sdk-mock');
-// // const m_response = require('cfn-response');
+// const sinon = require('sinon');
+// var AWS = require('aws-sdk-mock');
+// const m_response = require('cfn-response');
 
 // const ciscomerakiMock = require('./ciscomeraki_mock');
-// // var m_alCollector = require('@alertlogic/al-collector-js');
+// var m_alCollector = require('@alertlogic/al-collector-js');
 // var CiscomerakiCollector = require('../collector').CiscomerakiCollector;
-// // const m_al_aws = require('@alertlogic/al-aws-collector-js').Util;
+// const m_al_aws = require('@alertlogic/al-aws-collector-js').Util;
 
 // describe('Unit Tests', function() {
 //     describe('Next state tests', function() {

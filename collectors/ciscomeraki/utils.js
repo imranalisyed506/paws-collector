@@ -9,86 +9,98 @@ const PRODUCT_TYPES = [
     'switch',
     'wireless'
 ]; // product types
-
 async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSecret, maxPagesPerInvocation) {
     let nextPage;
-    
-    return new Promise((resolve, reject) => {
-        fetchAllEventsForNetworks(apiDetails, clientSecret, state, apiEndpoint).then(events => {
-            console.log('All events:', events.length);
-            accumulator = [...events];
-            resolve({ accumulator, nextPage })
-        }).catch(error => {
-            console.error('Error:', error);
-            reject(error)
-        });
-    })
-
-}
-
-async function paginatedFetch(url, apiKey, processData, perPage = 100, startingAfter = null) {
-    let allData = [];
-
-    do {
-        let fullUrl = `${url}&perPage=${perPage}`;
-        if (startingAfter) {
-            fullUrl += `&startingAfter=${startingAfter}`;
-        }
-
+    let pageCount = 0;
+    return new Promise(async (resolve, reject) => {
         try {
-            const response = await axios.get(fullUrl, {
-                headers: {
-                    'X-Cisco-Meraki-API-Key': apiKey,
-                    'Accept': 'application/json',
-                },
-            });
-            const data = processData(response);
-            allData = allData.concat(data);
-            // console.log('headers',response.headers.link);
-            const linkHeader = response.headers.link;
-            if (linkHeader && linkHeader.includes('rel="next"')) {
-                const nextLink = linkHeader.match(/<([^>]+)>; rel="next"/)[1];
-                startingAfter = new URL(nextLink).searchParams.get('startingAfter');
-            } else {
-                break; // No more pages
+            for (const productType of PRODUCT_TYPES) {
+                pageCount = 0;
+                await getData(productType);
             }
+            return resolve({ accumulator, nextPage });
         } catch (error) {
-            console.error(`Error fetching data:`, error.message);
-            break;
+            reject(error);
         }
-    } while (true);
+    });
 
-    return allData;
-}
-
-async function getAllNetworkIds(apiDetails, apiKey, state, apiEndpoint) {
-    const processNetworks = (response) => response.data.map(network => network.id);
-    return paginatedFetch(`https://${apiEndpoint}/api/v1/organizations/${apiDetails.orgKey}/networks?`, apiKey, processNetworks);
-}
-
-async function getEventsByNetwork(apiDetails, apiKey, networkId, state, apiEndpoint) {
-    const processEvents = (response) => response.data.events;
-    let allEvents = [];
-    for (const productType of PRODUCT_TYPES) {
-        let url = `https://${apiEndpoint}${apiDetails.url}/${networkId}/events?productType=${productType}&`;
-        const events = await paginatedFetch(url, apiKey, processEvents, 100, state.since);
-        console.log('networkId->',networkId,' productType->',productType, ' events:',events.length);
-        allEvents = allEvents.concat(events);
+    async function getData(productType) {
+        if (pageCount < maxPagesPerInvocation) {
+            pageCount++;
+            console.log('pageCount', pageCount, state.networkId);
+            let url = `https://${apiEndpoint}${apiDetails.url}/${state.networkId}/events?productType=${productType}&`;
+            try {
+                let response = await makeApiCall(url, clientSecret, 500, state.since);
+                let data = response && response.data ? response.data.events : [];
+                console.log('networkId->', url, ' productType->', productType, ' events:', data.length, 'pageCount', pageCount);
+                if (data.length) {
+                    accumulator = accumulator.concat(data);
+                }
+                headers = response.headers;
+                const linkHeader = response.headers.link;
+                if (linkHeader && linkHeader.includes('rel=next')) {
+                    const nextLink = linkHeader.match(/<([^>]+)>; rel=next/)[1];
+                    startingAfter = new URL(nextLink).searchParams.get('startingAfter');
+                    state.since = startingAfter;
+                    await getData(productType);
+                } else {
+                    console.log('No More Pages');
+                    state.until = response.data.pageEndAt;
+                }
+            } catch (error) {
+                throw error; // Rethrow the error to be caught by the outer try-catch
+            }
+        } else {
+            nextPage = state.since;
+        }
     }
-    return allEvents;
 }
 
-async function fetchAllEventsForNetworks(apiDetails, apiKey, state, apiEndpoint) {
-    const networkIds = await getAllNetworkIds(apiDetails, apiKey, state, apiEndpoint);
-    let allEvents = [];
+async function makeApiCall(url, apiKey, perPage, startingAfter = null) {
 
-    for (const networkId of networkIds) {
-        const events = await getEventsByNetwork(apiDetails, apiKey, networkId, state, apiEndpoint);
-        allEvents = allEvents.concat(events);
+    let fullUrl = `${url}&perPage=${perPage}`;
+    if (startingAfter) {
+        fullUrl += `&startingAfter=${startingAfter}`;
     }
 
-    return allEvents;
+    try {
+        const response = await axios.get(fullUrl, {
+            headers: {
+                'X-Cisco-Meraki-API-Key': apiKey,
+                'Accept': 'application/json',
+            },
+        });
+        return response;
+    } catch (error) {
+        throw error;
+        //  if (error.response && error.response.status === 429) {
+        //          const retryAfterSeconds = parseInt(error.response.headers['retry-after'] || '1');
+        //          console.log(`Rate limit exceeded. Retrying after ${retryAfterSeconds} seconds.`);
+        //          await new Promise(resolve => setTimeout(resolve, retryAfterSeconds * 1000));
+        //          return makeApiCall(url, apiKey, processData, perPage, startingAfter);
+        //  }
+
+    }
+
 }
+
+async function getAllNetworkIdsAndState(apiDetails, apiKey, state, apiEndpoint) {
+    let response =  makeApiCall(`https://${apiEndpoint}/api/v1/organizations/${apiDetails.orgKey}/networks?`, apiKey);
+    return response.data.map((network) => { return { "id": network.id } })
+}
+
+async function getAllNetworks(url, apiKey, apiEndpoint) {
+    // const processNetworks = (response) => response.data.map((network) => { return { "id": network.id } });
+    try {
+        let response = await makeApiCall(`https://${apiEndpoint}/${url}?`, apiKey, 1000);
+        console.log('networks', response.data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+   
+}
+
 
 function getAPIDetails(state, orgKey) {
     let url = "";
@@ -98,7 +110,7 @@ function getAPIDetails(state, orgKey) {
     let tsPaths = [];
     switch (state.stream) {
         case networkSecurityEvents:
-            url = `/api/v1/organizations/${orgKey}/networks`;
+            url = `/api/v1/networks`;
             typeIdPaths = [{ path: ["type"] }];
             tsPaths = [{ path: ["occurredAt"] }];
             break;
@@ -122,5 +134,6 @@ function getAPIDetails(state, orgKey) {
 
 module.exports = {
     getAPIDetails: getAPIDetails,
-    getAPILogs: getAPILogs
+    getAPILogs: getAPILogs,
+    getAllNetworks: getAllNetworks
 };
