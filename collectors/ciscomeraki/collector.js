@@ -1,5 +1,5 @@
 /* -----------------------------------------------------------------------------
- * @copyright (C) 2023, Alert Logic, Inc
+ * @copyright (C) 2024, Alert Logic, Inc
  * @doc
  *
  * ciscomeraki class.
@@ -16,7 +16,7 @@ const packageJson = require('./package.json');
 const calcNextCollectionInterval = require('@alertlogic/paws-collector').calcNextCollectionInterval;
 const utils = require("./utils");
 const AlLogger = require('@alertlogic/al-aws-collector-js').Logger;
-
+const MAX_POLL_INTERVAL = 900;
 let typeIdPaths = [];
 
 let tsPaths = [];
@@ -38,7 +38,6 @@ class CiscomerakiCollector extends PawsCollector {
            const url = `/api/v1/organizations/${orgKey}/networks`;
            const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
            const initialStates = networks.map(networkId => ({
-
                stream: resourceNames[0],
                networkId: networkId.id,
                since: startTs,
@@ -46,10 +45,8 @@ class CiscomerakiCollector extends PawsCollector {
                nextPage: null,
                poll_interval_sec: 1
            }));
-           console.log(JSON.stringify(initialStates, null, 2));
            return callback(null, initialStates, 1);
        } catch (error) {
-           console.log(error.message);
            return callback(error);
        }
     }
@@ -66,7 +63,8 @@ class CiscomerakiCollector extends PawsCollector {
 
         typeIdPaths = apiDetails.typeIdPaths;
         tsPaths = apiDetails.tsPaths;
-        // const networks = await utils.getAllNetworks(apiDetails.url, clientSecret, apiEndpoint);
+        // const url = `api/v1/organizations/${orgKey}/networks`;
+        // const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
         // networks.forEach(function (network) {
         //     state.networkId = network.id;
             AlLogger.info(`CMRI000001 Collecting data for ${state.stream}-${state.networkId} from ${state.since}`);
@@ -82,14 +80,12 @@ class CiscomerakiCollector extends PawsCollector {
                     return callback(null, accumulator, newState, newState.poll_interval_sec);  
                 })
                 .catch((error) => {
-                    console.log('eeeee',error);
-                    console.error(`Error fetching data:`, error);
-                    console.error(`Error fetching data:`, error.response.status);
-                    console.error(`Error fetching data:`, JSON.stringify(error.response.headers));
-                    console.error(`Error fetching data:`, JSON.stringify(error.response.data));
-                    console.error(`Error fetching data: retry`, error.response.headers['retry-after'] );
-                    if (error.response && error.response.status == 429) {
-                        state.poll_interval_sec = 10 + parseInt(error.response.headers['retry-after']);
+                    if (error && error.response && error.response.status == 429) {
+                        console.error(`Error fetching data: response.status`, error.response.status );
+                        const retry = parseInt(error.response.headers['retry-after']) || 1;
+                        console.error(`Error fetching data: retry`, error.response.headers['retry-after'] );
+                        state.poll_interval_sec = state.poll_interval_sec < MAX_POLL_INTERVAL ?
+                        state.poll_interval_sec + retry : MAX_POLL_INTERVAL;
                         AlLogger.warn(`Throttling error, retrying after ${state.poll_interval_sec}`);
                         collector.reportApiThrottling(function () {
                             return callback(null, [], state, state.poll_interval_sec);
@@ -97,6 +93,7 @@ class CiscomerakiCollector extends PawsCollector {
                     }
                     // set errorCode if not available in error object to showcase client error on DDMetric
                     else if (error.response && error.response.data) {
+                        // console.log(error.response.data);
                         error.response.data.errorCode = error.response.status;
                         return callback(error.response.data);
                     }
@@ -105,7 +102,6 @@ class CiscomerakiCollector extends PawsCollector {
                     }
                 });
         // })
-      
     }
 
     async validateAndPrepare(callback) {
@@ -147,7 +143,15 @@ class CiscomerakiCollector extends PawsCollector {
             nextPage:null,
             poll_interval_sec: 1
         };
+        console.log('_getNextCollectionStateWithNextPage',JSON.stringify(obj));
         return obj;
+    }
+
+    pawsGetRegisterParameters(event, callback) {
+        const regValues = {
+            ciscoMerakiObjectNames: process.env.collector_streams
+        };
+        callback(null, regValues);
     }
     
     pawsFormatLog(msg) {

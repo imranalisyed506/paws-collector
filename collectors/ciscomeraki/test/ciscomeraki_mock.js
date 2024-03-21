@@ -16,6 +16,7 @@ process.env.al_application_id = 'application_id';
 process.env.paws_secret_param_name = "ciscomeraki-param-name";
 process.env.paws_poll_interval = 60;
 process.env.paws_type_name = "ciscomeraki";
+process.env.paws_collector_param_string_2 = "12345";
 process.env.paws_api_secret = "secret";
 process.env.paws_endpoint = "api.meraki.com";
 process.env.collector_streams = "[\"networkSecurityEvents\"]";
@@ -42,6 +43,53 @@ const LOG_EVENT = {
       "msg": "<l2tp-over-ipsec-1|97> deleting IKE_SA l2tp-over-ipsec-1[97] between 209.163.151.90[209.163.151.90]...117.200.14.68[192.168.1.6]"
     }
   };
+
+  const NETWORKS = [
+    {
+      id: 'L_686235993220604684',
+      organizationId: '1547127',
+      name: 'Alert Logic Test Kit',
+      productTypes: [
+        'appliance',
+        'camera',
+        'cellularGateway',
+        'sensor',
+        'switch',
+        'wireless'
+      ],
+      timeZone: 'America/Los_Angeles',
+      tags: [],
+      enrollmentString: null,
+      url: 'https://n219.meraki.com/Alert-Logic-Test/n/el2PiaBd/manage/usage/list',
+      notes: 'Test node',
+      isBoundToConfigTemplate: false
+    },
+    {
+      id: 'L_686235993220604720',
+      organizationId: '1547127',
+      name: 'Alert Logic Test Kit 1 ',
+      productTypes: [
+        'appliance',
+        'camera',
+        'cellularGateway',
+        'sensor',
+        'switch',
+        'wireless'
+      ],
+      timeZone: 'America/Los_Angeles',
+      tags: [],
+      enrollmentString: null,
+      url: 'https://n219.meraki.com/Alert-Logic-Test/n/yNvOHaBd/manage/usage/list',
+      notes: 'Test node',
+      isBoundToConfigTemplate: false
+    }
+  ];
+
+const mockInitialStates = [
+  { stream: 'networkSecurityEvents', networkId: 'L_686235993220604684', since: '2024-03-20T07:24:34.657Z', until: '2024-03-20T07:25:34.657Z', nextPage: null },
+  { stream: 'networkSecurityEvents', networkId: 'L_686235993220604720', since: '2024-03-20T07:24:34.657Z', until: '2024-03-20T07:25:34.657Z', nextPage: null }
+];
+
 const FUNCTION_ARN = 'arn:aws:lambda:us-east-1:352283894008:function:test-01-CollectLambdaFunction-2CWNLPPW5XO8';
 const FUNCTION_NAME = 'test-TestCollectLambdaFunction-1JNNKQIPOTEST';
 
@@ -49,5 +97,6 @@ module.exports = {
     AIMS_TEST_CREDS: AIMS_TEST_CREDS,
     FUNCTION_ARN: FUNCTION_ARN,
     FUNCTION_NAME: FUNCTION_NAME,
-    LOG_EVENT: LOG_EVENT
+    LOG_EVENT: LOG_EVENT,
+    NETWORKS:NETWORKS
 };
