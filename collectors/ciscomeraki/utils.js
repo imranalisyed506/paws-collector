@@ -19,7 +19,7 @@ async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSec
     let since;
     return new Promise(async (resolve, reject) => {
         try {
-            for (const productType of PRODUCT_TYPES) {
+            for (const productType of apiDetails.productTypes) {
                 pageCount = 0;
                 since = state.since;
                 await getData(productType);
@@ -37,9 +37,11 @@ async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSec
             try {
                 let response = await makeApiCall(url, clientSecret, 500, since);
                 let data = response && response.data ? response.data.events : [];
-                AlLogger.debug(`networkId->', ${url}, ' productType->', ${productType}, ' events:', ${data.length}, 'pageCount', ${pageCount}`);
+                console.log(`networkId->', ${url}, ' productType->', ${productType}, ' events:', ${data.length}, 'pageCount', ${pageCount}`);
                 if (data.length) {
                     accumulator = accumulator.concat(data);
+                }else{
+                    return accumulator;
                 }
                 headers = response.headers;
                 const linkHeader = response.headers.link;
@@ -53,7 +55,7 @@ async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSec
                     state.until = response.data.pageEndAt;
                 }
             } catch (error) {
-                throw error; // Rethrow the error to be caught by the outer try-catch
+                AlLogger.debug(`CMRI000009 ${error.message}`);
             }
         } else {
             nextPage = since;
@@ -91,7 +93,7 @@ async function getAllNetworks(url, apiKey, apiEndpoint) {
 
 }
 
-function getAPIDetails(state, orgKey) {
+function getAPIDetails(state, orgKey, productTypes) {
     let url = "";
     let method = "GET";
     let requestBody = "";
@@ -103,11 +105,6 @@ function getAPIDetails(state, orgKey) {
             typeIdPaths = [{ path: ["type"] }];
             tsPaths = [{ path: ["occurredAt"] }];
             break;
-        case orgApplianceSecurityEvents:
-            url = `/api/v1/organizations/${orgKey}/appliance/security/events`;
-            typeIdPaths = [{ path: ["eventType"] }];
-            tsPaths = [{ path: ["ts"] }];
-            break;
         default:
             url = null;
     }
@@ -116,6 +113,7 @@ function getAPIDetails(state, orgKey) {
         method,
         requestBody,
         orgKey,
+        productTypes,
         typeIdPaths,
         tsPaths
     };

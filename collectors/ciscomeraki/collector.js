@@ -34,73 +34,81 @@ class CiscomerakiCollector extends PawsCollector {
         const endTs = moment(startTs).add(this.pollInterval, 'seconds').toISOString();
         const { clientSecret, apiEndpoint, orgKey } = await this.validateAndPrepare(callback);
         const resourceNames = JSON.parse(process.env.collector_streams);
-       try {
+        try {
            const url = `/api/v1/organizations/${orgKey}/networks`;
            const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
-           const initialStates = networks.map(networkId => ({
-               stream: resourceNames[0],
-               networkId: networkId.id,
-               since: startTs,
-               until: endTs,
-               nextPage: null,
-               poll_interval_sec: 1
-           }));
-           return callback(null, initialStates, 1);
-       } catch (error) {
+           if (networks.length > 0) {
+               const initialStates = networks.map(networkId => ({
+                   stream: resourceNames[0],
+                   networkId: networkId.id,
+                   since: startTs,
+                   until: endTs,
+                   nextPage: null,
+                   poll_interval_sec: 1
+               }));
+               return callback(null, initialStates, 1);
+           } else {
+               return callback("No networks found");
+           }
+        } catch (error) {
            return callback(error);
        }
     }
     
     async pawsGetLogs(state, callback) {
         const collector = this;
+
+        const productTypes = JSON.parse(process.env.paws_collector_param_string_1);
+        if (!productTypes) {
+            return callback("The Product Types was not found!");
+        }
+
         const { clientSecret, apiEndpoint, orgKey } = await this.validateAndPrepare(callback);
 
-        const apiDetails = utils.getAPIDetails(state, orgKey);
+        const apiDetails = utils.getAPIDetails(state, orgKey, productTypes);
 
         if (!apiDetails.url) {
             return callback("The API name was not found!");
         }
-
         typeIdPaths = apiDetails.typeIdPaths;
         tsPaths = apiDetails.tsPaths;
         // const url = `api/v1/organizations/${orgKey}/networks`;
         // const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
         // networks.forEach(function (network) {
         //     state.networkId = network.id;
-            AlLogger.info(`CMRI000001 Collecting data for ${state.stream}-${state.networkId} from ${state.since}`);
-            utils.getAPILogs(apiDetails, [], apiEndpoint, state, clientSecret, process.env.paws_max_pages_per_invocation)
-                .then(({ accumulator, nextPage }) => {
-                    let newState;
-                    if (nextPage === undefined) {
-                        newState = this._getNextCollectionState(state);
-                    } else {
-                        newState = this._getNextCollectionStateWithNextPage(state, nextPage);
-                    }
-                    AlLogger.info(`CMRI000002 Next collection in ${newState.poll_interval_sec} seconds`);
-                    return callback(null, accumulator, newState, newState.poll_interval_sec);  
-                })
-                .catch((error) => {
-                    if (error && error.response && error.response.status == 429) {
-                        console.error(`Error fetching data: response.status`, error.response.status );
-                        const retry = parseInt(error.response.headers['retry-after']) || 1;
-                        console.error(`Error fetching data: retry`, error.response.headers['retry-after'] );
-                        state.poll_interval_sec = state.poll_interval_sec < MAX_POLL_INTERVAL ?
+        AlLogger.info(`CMRI000001 Collecting data for ${state.stream}-${state.networkId} from ${state.since}`);
+        utils.getAPILogs(apiDetails, [], apiEndpoint, state, clientSecret, process.env.paws_max_pages_per_invocation)
+            .then(({ accumulator, nextPage }) => {
+                let newState;
+                if (nextPage === undefined) {
+                    newState = this._getNextCollectionState(state);
+                } else {
+                    newState = this._getNextCollectionStateWithNextPage(state, nextPage);
+                }
+                AlLogger.info(`CMRI000002 Next collection in ${newState.poll_interval_sec} seconds`);
+                return callback(null, accumulator, newState, newState.poll_interval_sec);
+            })
+            .catch((error) => {
+                if (error && error.response && error.response.status == 429) {
+                    const retry = parseInt(error.response.headers['retry-after']) || 1;
+                    // console.error(`Error fetching data: retry`, error.response.headers['retry-after'] );
+                    state.poll_interval_sec = state.poll_interval_sec < MAX_POLL_INTERVAL ?
                         state.poll_interval_sec + retry : MAX_POLL_INTERVAL;
-                        AlLogger.warn(`Throttling error, retrying after ${state.poll_interval_sec}`);
-                        collector.reportApiThrottling(function () {
-                            return callback(null, [], state, state.poll_interval_sec);
-                        });
-                    }
-                    // set errorCode if not available in error object to showcase client error on DDMetric
-                    else if (error.response && error.response.data) {
-                        // console.log(error.response.data);
-                        error.response.data.errorCode = error.response.status;
-                        return callback(error.response.data);
-                    }
-                    else {
-                        return callback(error);
-                    }
-                });
+                    console.error(`Throttling error, retrying after ${state.poll_interval_sec}`);
+                    collector.reportApiThrottling(function () {
+                        return callback(null, [], state, state.poll_interval_sec);
+                    });
+                }
+                // set errorCode if not available in error object to showcase client error on DDMetric
+                else if (error.response && error.response.data) {
+                    // console.log(error.response.data);
+                    error.response.data.errorCode = error.response.status;
+                    return callback(error.response.data);
+                }
+                else {
+                    return callback(error);
+                }
+            });
         // })
     }
 

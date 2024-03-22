@@ -69,6 +69,11 @@
             "Type": "String",
             "Default": ""
         },
+        "CiscomerakiProductTypes": {
+            "Description": "Define Product Types names. Please pass JSON formatted list. Possible values are [\"appliances\",\"systemsManager\"]",
+            "Type": "String",
+            "Default": ""
+        },
         "CiscomerakiAPINames": {
             "Description": "Define API names. Please pass JSON formatted list. Possible values are [\"networkSecurityEvents\"]",
             "Type": "String",
@@ -105,6 +110,7 @@
             "PawsAuthType" : "oauth2",
             "PawsClientId" : "",
             "CollectorStreams" : { "Ref":"CiscomerakiAPINames" },
+            "CollectorParamString1" : { "Ref":"CiscomerakiProductTypes" },
             "CollectorParamString2" : { "Ref":"CiscomerakiOrgKey" },
             "PawsSecret" : { "Ref":"CiscomerakiSecret" },
             "CollectionStartTs" : { "Ref":"CollectionStartTs" }

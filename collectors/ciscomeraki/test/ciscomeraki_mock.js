@@ -98,5 +98,6 @@ module.exports = {
     FUNCTION_ARN: FUNCTION_ARN,
     FUNCTION_NAME: FUNCTION_NAME,
     LOG_EVENT: LOG_EVENT,
-    NETWORKS:NETWORKS
+    NETWORKS:NETWORKS,
+    mockInitialStates:mockInitialStates
 };

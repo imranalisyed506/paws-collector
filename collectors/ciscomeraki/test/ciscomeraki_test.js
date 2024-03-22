@@ -7,8 +7,7 @@
 // const moment = require('moment');
 // const utils = require("../utils");
 
-// const { CloudWatch } = require("@aws-sdk/client-cloudwatch"),
-//     { KMS } = require("@aws-sdk/client-kms"),
+// const { KMS } = require("@aws-sdk/client-kms"),
 //     { SSM } = require("@aws-sdk/client-ssm");
 
 
@@ -129,7 +128,6 @@
 //                 });
 //             getAPIDetails = sinon.stub(utils, 'getAPIDetails').callsFake(
 //                 function fakeFn(state) {
-//                     const startDate = moment().subtract(1, 'days');
 //                     return {
 //                         url: "api_url",
 //                         typeIdPaths: [{ path: ["type"] }],
@@ -153,6 +151,7 @@
 //                     nextPage: null,
 //                     poll_interval_sec: 1
 //                 };
+//                 process.env.network_ids  = ["L_686235993220604684","L_686235993220604720"];
 //                 collector.pawsGetLogs(curState, (err, logs, newState, newPollInterval) => {
 //                     assert.equal(logs.length, 2);
 //                     assert.equal(newState.poll_interval_sec, 300);
@@ -166,100 +165,93 @@
 //             });
 //         });
 
-//         it('Paws Get Logs With NextPage Success', function (done) {
-//             getAllNetworks = sinon.stub(utils, 'getAllNetworks').callsFake(
-//                 function fakeFn(client, objectDetails, state, accumulator, maxPagesPerInvocation) {
-//                     return new Promise(function (resolve, reject) {
-//                         return resolve(ciscomerakiMock.NETWORKS);
-//                     });
-//                 });
-//             getAPILogs = sinon.stub(utils, 'getAPILogs').callsFake(
-//                 function fakeFn(client, objectDetails, state, accumulator, maxPagesPerInvocation) {
-//                     return new Promise(function (resolve, reject) {
-//                         return resolve({ accumulator: [ciscomerakiMock.LOG_EVENT, ciscomerakiMock.LOG_EVENT], nextPage: "nextPage" });
-//                     });
-//                 });
-//             getAPIDetails = sinon.stub(utils, 'getAPIDetails').callsFake(
-//                 function fakeFn(state) {
-//                     const startDate = moment().subtract(1, 'days');
-//                     return {
-//                         url: "api_url",
-//                         typeIdPaths: [{ path: ["type"] }],
-//                         tsPaths: [{ path: ["occurredAt"] }],
-//                         method: "GET"
-//                     };
-//                 });
-//             CiscomerakiCollector.load().then(function (creds) {
-//                 var collector = new CiscomerakiCollector(ctx, creds, 'ciscomeraki');
-//                 const startDate = "2024-03-21T08:00:21.754Z";
-//                 const curState = {
-//                     stream: "networkSecurityEvents",
-//                     since: startDate.valueOf(),
-//                     until: startDate.add(2, 'days').valueOf(),
-//                     nextPage: null,
-//                     poll_interval_sec: 1
-//                 };
-//                 collector.pawsGetLogs(curState, (err, logs, newState, newPollInterval) => {
-//                     assert.equal(logs.length, 2);
-//                     assert.equal(newState.poll_interval_sec, 60);
-//                     assert.equal(newState.nextPage, "nextPage");
-//                     assert.ok(logs[0].type);
-//                     getAPILogs.restore();
-//                     getAPIDetails.restore();
-//                     getAllNetworks.restore();
+//         // it('Paws Get Logs With NextPage Success', function (done) {
+//         //     getAllNetworks = sinon.stub(utils, 'getAllNetworks').callsFake(
+//         //         function fakeFn(client, objectDetails, state, accumulator, maxPagesPerInvocation) {
+//         //             return new Promise(function (resolve, reject) {
+//         //                 return resolve(ciscomerakiMock.NETWORKS);
+//         //             });
+//         //         });
+//         //     getAPILogs = sinon.stub(utils, 'getAPILogs').callsFake(
+//         //         function fakeFn(client, objectDetails, state, accumulator, maxPagesPerInvocation) {
+//         //             return new Promise(function (resolve, reject) {
+//         //                 return resolve({ accumulator: [ciscomerakiMock.LOG_EVENT, ciscomerakiMock.LOG_EVENT], nextPage: "nextPage" });
+//         //             });
+//         //         });
+//         //     getAPIDetails = sinon.stub(utils, 'getAPIDetails').callsFake(
+//         //         function fakeFn(state) {
+//         //             return {
+//         //                 url: "api_url",
+//         //                 typeIdPaths: [{ path: ["type"] }],
+//         //                 tsPaths: [{ path: ["occurredAt"] }],
+//         //                 method: "GET"
+//         //             };
+//         //         });
+//         //     CiscomerakiCollector.load().then(function (creds) {
+//         //         var collector = new CiscomerakiCollector(ctx, creds, 'ciscomeraki');
+//         //         const startDate = "2024-03-21T08:00:21.754Z";
+//         //         const curState = {
+//         //             stream: "networkSecurityEvents",
+//         //             since: startDate.valueOf(),
+//         //             until: startDate.add(2, 'days').valueOf(),
+//         //             nextPage: null,
+//         //             poll_interval_sec: 1
+//         //         };
+//         //         collector.pawsGetLogs(curState, (err, logs, newState, newPollInterval) => {
+//         //             assert.equal(logs.length, 2);
+//         //             assert.equal(newState.poll_interval_sec, 60);
+//         //             assert.equal(newState.nextPage, "nextPage");
+//         //             assert.ok(logs[0].type);
+//         //             getAPILogs.restore();
+//         //             getAPIDetails.restore();
+//         //             getAllNetworks.restore();
 
-//                     done();
-//                 });
+//         //             done();
+//         //         });
 
-//             });
-//         });
+//         //     });
+//         // });
 
-//         it('Paws Get client error', function (done) {
-//             // getAllNetworks = sinon.stub(utils, 'getAllNetworks').callsFake(
-//             //     function fakeFn(client, objectDetails, state, accumulator, maxPagesPerInvocation) {
-//             //         return new Promise(function (resolve, reject) {
-//             //             return resolve(ciscomerakiMock.NETWORKS);
-//             //         });
-//             //     });
-//             getAPILogs = sinon.stub(utils, 'getAPILogs').callsFake(
-//                 function fakeFn(client, objectDetails, state, accumulator, maxPagesPerInvocation) {
-//                     return new Promise(function (resolve, reject) {
-//                         return reject({
-//                             code: 40103,
-//                             message: 'Invalid signature in request credentials',
-//                             stat: 'FAIL'
-//                         });
-//                     });
-//                 });
-//             getAPIDetails = sinon.stub(utils, 'getAPIDetails').callsFake(
-//                 function fakeFn(state) {
-//                     const startDate = moment().subtract(1, 'days');
-//                     return {
-//                         url: "api_url",
-//                         typeIdPaths: [{ path: ["type"] }],
-//                         tsPaths: [{ path: ["occurredAt"] }],
-//                         method: "GET"
-//                     };
-//                 });
-//             CiscomerakiCollector.load().then(function (creds) {
-//                 var collector = new CiscomerakiCollector(ctx, creds, 'ciscomeraki');
-//                 const startDate = moment().subtract(3, 'days');
-//                 const curState = {
-//                     stream: "networkSecurityEvents",
-//                     since: startDate.valueOf(),
-//                     until: startDate.add(2, 'days').valueOf(),
-//                     nextPage: null,
-//                     poll_interval_sec: 1
-//                 };
-//                 collector.pawsGetLogs(curState, (err, logs, newState, newPollInterval) => {
-//                     assert.equal(err.errorCode, 40103);
-//                     getAPILogs.restore();
-//                     getAPIDetails.restore();
-//                     done();
-//                 });
+//         // it('Paws Get client error', function (done) {
+           
+//         //     getAPILogs = sinon.stub(utils, 'getAPILogs').callsFake(
+//         //         function fakeFn(client, objectDetails, state, accumulator, maxPagesPerInvocation) {
+//         //             return new Promise(function (resolve, reject) {
+//         //                 return reject({
+//         //                     code: 40103,
+//         //                     message: 'Invalid signature in request credentials',
+//         //                     stat: 'FAIL'
+//         //                 });
+//         //             });
+//         //         });
+//         //     getAPIDetails = sinon.stub(utils, 'getAPIDetails').callsFake(
+//         //         function fakeFn(state) {
+//         //             return {
+//         //                 url: "api_url",
+//         //                 typeIdPaths: [{ path: ["type"] }],
+//         //                 tsPaths: [{ path: ["occurredAt"] }],
+//         //                 method: "GET"
+//         //             };
+//         //         });
+//         //     CiscomerakiCollector.load().then(function (creds) {
+//         //         var collector = new CiscomerakiCollector(ctx, creds, 'ciscomeraki');
+//         //         const startDate = moment().subtract(3, 'days');
+//         //         const curState = {
+//         //             stream: "networkSecurityEvents",
+//         //             since: startDate.valueOf(),
+//         //             until: startDate.add(2, 'days').valueOf(),
+//         //             nextPage: null,
+//         //             poll_interval_sec: 1
+//         //         };
+//         //         collector.pawsGetLogs(curState, (err, logs, newState, newPollInterval) => {
+//         //             assert.equal(err.errorCode, 40103);
+//         //             getAPILogs.restore();
+//         //             getAPIDetails.restore();
+//         //             done();
+//         //         });
 
-//             });
-//         });
+//         //     });
+//         // });
 
 //         // it('Paws Get Logs check throttling error', function (done) {
 
@@ -306,33 +298,33 @@
 //         // });
 //     });
 
-//     describe('Next state tests', function () {
-//         let ctx = {
-//             invokedFunctionArn: ciscomerakiMock.FUNCTION_ARN,
-//             fail: function (error) {
-//                 assert.fail(error);
-//             },
-//             succeed: function () { }
-//         };
+//     // describe('Next state tests', function () {
+//     //     let ctx = {
+//     //         invokedFunctionArn: ciscomerakiMock.FUNCTION_ARN,
+//     //         fail: function (error) {
+//     //             assert.fail(error);
+//     //         },
+//     //         succeed: function () { }
+//     //     };
 
-//         it('Next state tests success with networkSecurityEvents', function (done) {
-//             CiscomerakiCollector.load().then(function (creds) {
-//                 var collector = new CiscomerakiCollector(ctx, creds, 'ciscomeraki');
-//                 const startDate = moment();
-//                 const curState = {
-//                     stream: "networkSecurityEvents",
-//                     since: startDate.valueOf(),
-//                     until: startDate.add(collector.pollInterval, 'seconds').valueOf(),
-//                     nextPage: null,
-//                     poll_interval_sec: 1
-//                 };
-//                 let nextState = collector._getNextCollectionState(curState);
-//                 assert.equal(nextState.poll_interval_sec, process.env.paws_poll_interval_delay);
-//                 done();
-//             });
-//         });
+//     //     it('Next state tests success with networkSecurityEvents', function (done) {
+//     //         CiscomerakiCollector.load().then(function (creds) {
+//     //             var collector = new CiscomerakiCollector(ctx, creds, 'ciscomeraki');
+//     //             const startDate = moment();
+//     //             const curState = {
+//     //                 stream: "networkSecurityEvents",
+//     //                 since: startDate.valueOf(),
+//     //                 until: startDate.add(collector.pollInterval, 'seconds').valueOf(),
+//     //                 nextPage: null,
+//     //                 poll_interval_sec: 1
+//     //             };
+//     //             let nextState = collector._getNextCollectionState(curState);
+//     //             assert.equal(nextState.poll_interval_sec, process.env.paws_poll_interval_delay);
+//     //             done();
+//     //         });
+//     //     });
 
-//     });
+//     // });
 
 //     describe('Format Tests', function () {
 //         it('log format success', function (done) {
