@@ -5,14 +5,6 @@ const axios = require('axios').create({
 });
 const AlLogger = require('@alertlogic/al-aws-collector-js').Logger;
 
-const networkSecurityEvents = 'networkSecurityEvents';
-const PRODUCT_TYPES = [
-    'appliance',
-    'camera',
-    'cellularGateway',
-    'switch',
-    'wireless'
-]; // product types
 async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSecret, maxPagesPerInvocation) {
     let nextPage;
     let pageCount = 0;
@@ -33,7 +25,7 @@ async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSec
     async function getData(productType) {
         if (pageCount < maxPagesPerInvocation) {
             pageCount++;
-            let url = `https://${apiEndpoint}${apiDetails.url}/${state.networkId}/events?productType=${productType}`;
+            let url = `https://${apiEndpoint}${apiDetails.url}/${state.stream}/events?productType=${productType}`;
             try {
                 let response = await makeApiCall(url, clientSecret, 500, since);
                 let data = response && response.data ? response.data.events : [];
@@ -93,29 +85,16 @@ async function getAllNetworks(url, apiKey, apiEndpoint) {
 
 }
 
-function getAPIDetails(state, orgKey, productTypes) {
-    let url = "";
+function getAPIDetails(orgKey, productTypes) {
+    let url = "/api/v1/networks";
     let method = "GET";
-    let requestBody = "";
-    let typeIdPaths = [];
-    let tsPaths = [];
-    switch (state.stream) {
-        case networkSecurityEvents:
-            url = `/api/v1/networks`;
-            typeIdPaths = [{ path: ["type"] }];
-            tsPaths = [{ path: ["occurredAt"] }];
-            break;
-        default:
-            url = null;
-    }
+    let requestBody="";
     return {
         url,
         method,
         requestBody,
         orgKey,
-        productTypes,
-        typeIdPaths,
-        tsPaths
+        productTypes
     };
 }
 

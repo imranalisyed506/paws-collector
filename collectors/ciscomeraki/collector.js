@@ -17,17 +17,16 @@ const calcNextCollectionInterval = require('@alertlogic/paws-collector').calcNex
 const utils = require("./utils");
 const AlLogger = require('@alertlogic/al-aws-collector-js').Logger;
 const MAX_POLL_INTERVAL = 900;
-let typeIdPaths = [];
 
-let tsPaths = [];
-
+let typeIdPaths = [{ path: ["type"] }];
+let tsPaths = [{ path: ["occurredAt"] }];
 
 class CiscomerakiCollector extends PawsCollector {
     constructor(context, creds) {
         super(context, creds, packageJson.version);
     }
     
-   async pawsInitCollectionState(event, callback) {
+    async pawsInitCollectionState(event, callback) {
         const startTs = process.env.paws_collection_start_ts ?
             process.env.paws_collection_start_ts :
             moment().toISOString();
@@ -35,26 +34,39 @@ class CiscomerakiCollector extends PawsCollector {
         const { clientSecret, apiEndpoint, orgKey } = await this.validateAndPrepare(callback);
         const resourceNames = JSON.parse(process.env.collector_streams);
         try {
-           const url = `/api/v1/organizations/${orgKey}/networks`;
-           const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
-           if (networks.length > 0) {
-               const initialStates = networks.map(networkId => ({
-                   stream: resourceNames[0],
-                   networkId: networkId.id,
-                   since: startTs,
-                   until: endTs,
-                   nextPage: null,
-                   poll_interval_sec: 1
-               }));
-               return callback(null, initialStates, 1);
-           } else {
-               return callback("No networks found");
-           }
+            if (resourceNames.length > 0) {
+                const initialStates = resourceNames.map(networkId => ({
+                    stream: networkId.id,
+                    since: startTs,
+                    until: endTs,
+                    nextPage: null,
+                    poll_interval_sec: 1
+                }));
+                return callback(null, initialStates, 1);
+            }
+            else {
+                const url = `/api/v1/organizations/${orgKey}/networks`;
+                const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
+                if (networks.length > 0) {
+                    const initialStates = networks.map(networkId => ({
+                        stream: networkId.id,
+                        since: startTs,
+                        until: endTs,
+                        nextPage: null,
+                        poll_interval_sec: 1
+                    }));
+                    return callback(null, initialStates, 1);
+                } else {
+                    return callback("No networks found");
+                }
+            }
+
         } catch (error) {
-           return callback(error);
-       }
+            return callback(error);
+        }
     }
     
+
     async pawsGetLogs(state, callback) {
         const collector = this;
 
@@ -65,18 +77,16 @@ class CiscomerakiCollector extends PawsCollector {
 
         const { clientSecret, apiEndpoint, orgKey } = await this.validateAndPrepare(callback);
 
-        const apiDetails = utils.getAPIDetails(state, orgKey, productTypes);
+        const apiDetails = utils.getAPIDetails(orgKey, productTypes);
 
         if (!apiDetails.url) {
             return callback("The API name was not found!");
         }
-        typeIdPaths = apiDetails.typeIdPaths;
-        tsPaths = apiDetails.tsPaths;
         // const url = `api/v1/organizations/${orgKey}/networks`;
         // const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
         // networks.forEach(function (network) {
         //     state.networkId = network.id;
-        AlLogger.info(`CMRI000001 Collecting data for ${state.stream}-${state.networkId} from ${state.since}`);
+        AlLogger.info(`CMRI000001 Collecting data for NetworkId-${state.stream} from ${state.since}`);
         utils.getAPILogs(apiDetails, [], apiEndpoint, state, clientSecret, process.env.paws_max_pages_per_invocation)
             .then(({ accumulator, nextPage }) => {
                 let newState;
@@ -91,17 +101,15 @@ class CiscomerakiCollector extends PawsCollector {
             .catch((error) => {
                 if (error && error.response && error.response.status == 429) {
                     const retry = parseInt(error.response.headers['retry-after']) || 1;
-                    // console.error(`Error fetching data: retry`, error.response.headers['retry-after'] );
                     state.poll_interval_sec = state.poll_interval_sec < MAX_POLL_INTERVAL ?
                         state.poll_interval_sec + retry : MAX_POLL_INTERVAL;
-                    console.error(`Throttling error, retrying after ${state.poll_interval_sec}`);
+                        AlLogger.infor(`CMRI000002 Throttling error, retrying after ${state.poll_interval_sec}`);
                     collector.reportApiThrottling(function () {
                         return callback(null, [], state, state.poll_interval_sec);
                     });
                 }
                 // set errorCode if not available in error object to showcase client error on DDMetric
                 else if (error.response && error.response.data) {
-                    // console.log(error.response.data);
                     error.response.data.errorCode = error.response.status;
                     return callback(error.response.data);
                 }
@@ -133,8 +141,7 @@ class CiscomerakiCollector extends PawsCollector {
         const untilMoment = moment(curState.until);
         const { nextUntilMoment, nextSinceMoment, nextPollInterval } = calcNextCollectionInterval('no-cap', untilMoment, this.pollInterval);
         return {
-            stream: curState.stream,
-            networkId:curState.networkId,
+            stream: curState.networkId,
             since: nextSinceMoment.toISOString(),
             until: nextUntilMoment.toISOString(),
             nextPage: null,
@@ -142,10 +149,9 @@ class CiscomerakiCollector extends PawsCollector {
         };
     }
 
-    _getNextCollectionStateWithNextPage({ stream, since, until,networkId }, nextPage) {
+    _getNextCollectionStateWithNextPage({ stream, since, until }, nextPage) {
         const obj = {
             stream,
-            networkId,
             since:nextPage,
             until,
             nextPage:null,

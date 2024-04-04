@@ -74,11 +74,6 @@
             "Type": "String",
             "Default": ""
         },
-        "CiscomerakiAPINames": {
-            "Description": "Define API names. Please pass JSON formatted list. Possible values are [\"networkSecurityEvents\"]",
-            "Type": "String",
-            "Default": "[\"networkSecurityEvents\"]"
-        },
         "CollectionStartTs": {
             "Description": "Timestamp when log collection starts. For example, 2019-11-21T16:00:00Z",
             "Type": "String",
@@ -109,7 +104,6 @@
             "PawsEndpoint" : { "Ref":"CiscomerakiEndpoint" },
             "PawsAuthType" : "oauth2",
             "PawsClientId" : "",
-            "CollectorStreams" : { "Ref":"CiscomerakiAPINames" },
             "CollectorParamString1" : { "Ref":"CiscomerakiProductTypes" },
             "CollectorParamString2" : { "Ref":"CiscomerakiOrgKey" },
             "PawsSecret" : { "Ref":"CiscomerakiSecret" },

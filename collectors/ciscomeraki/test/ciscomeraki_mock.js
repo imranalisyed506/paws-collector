@@ -17,9 +17,10 @@ process.env.paws_secret_param_name = "ciscomeraki-param-name";
 process.env.paws_poll_interval = 60;
 process.env.paws_type_name = "ciscomeraki";
 process.env.paws_collector_param_string_2 = "12345";
+process.env.paws_collector_param_string_1 = "[\"appliance\",\"systemsManager\",\"switch\"]";
 process.env.paws_api_secret = "secret";
 process.env.paws_endpoint = "api.meraki.com";
-process.env.collector_streams = "[\"networkSecurityEvents\"]";
+process.env.collector_streams = "[\"L_686235993220604684\"]";
 process.env.paws_api_client_id = "client-id";
 process.env.paws_poll_interval_delay = 300;
 
@@ -86,8 +87,8 @@ const LOG_EVENT = {
   ];
 
 const mockInitialStates = [
-  { stream: 'networkSecurityEvents', networkId: 'L_686235993220604684', since: '2024-03-20T07:24:34.657Z', until: '2024-03-20T07:25:34.657Z', nextPage: null },
-  { stream: 'networkSecurityEvents', networkId: 'L_686235993220604720', since: '2024-03-20T07:24:34.657Z', until: '2024-03-20T07:25:34.657Z', nextPage: null }
+  { stream: 'L_686235993220604684', since: '2024-03-20T07:24:34.657Z', until: '2024-03-20T07:25:34.657Z', nextPage: null },
+  { stream: 'L_686235993220604682', since: '2024-03-20T07:24:34.657Z', until: '2024-03-20T07:25:34.657Z', nextPage: null }
 ];
 
 const FUNCTION_ARN = 'arn:aws:lambda:us-east-1:352283894008:function:test-01-CollectLambdaFunction-2CWNLPPW5XO8';
