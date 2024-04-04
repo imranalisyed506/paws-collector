@@ -1,7 +1,5 @@
 const axios = require('axios').create({
-    httpsAgent: new require('https').Agent({
-        rejectUnauthorized: false
-    })
+    httpsAgent: new require('https').Agent()
 });
 const AlLogger = require('@alertlogic/al-aws-collector-js').Logger;
 

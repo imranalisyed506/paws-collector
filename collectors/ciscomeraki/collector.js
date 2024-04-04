@@ -32,7 +32,7 @@ class CiscomerakiCollector extends PawsCollector {
             moment().toISOString();
         const endTs = moment(startTs).add(this.pollInterval, 'seconds').toISOString();
         const { clientSecret, apiEndpoint, orgKey } = await this.validateAndPrepare(callback);
-        const resourceNames = JSON.parse(process.env.collector_streams);
+        const resourceNames = process.env.collector_streams ? JSON.parse(process.env.collector_streams):[];
         try {
             if (resourceNames.length > 0) {
                 const initialStates = resourceNames.map(networkId => ({
