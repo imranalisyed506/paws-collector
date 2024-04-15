@@ -35,8 +35,8 @@ class CiscomerakiCollector extends PawsCollector {
         const resourceNames = process.env.collector_streams ? JSON.parse(process.env.collector_streams):[];
         try {
             if (resourceNames.length > 0) {
-                const initialStates = resourceNames.map(networkId => ({
-                    stream: networkId.id,
+                const initialStates = resourceNames.map(stream => ({
+                    stream: stream,
                     since: startTs,
                     until: endTs,
                     nextPage: null,
@@ -53,7 +53,7 @@ class CiscomerakiCollector extends PawsCollector {
                         since: startTs,
                         until: endTs,
                         nextPage: null,
-                        poll_interval_sec: 1
+                        poll_interval_sec: parseInt(Math.floor(Math.random() * 30) + 1)
                     }));
                     return callback(null, initialStates, 1);
                 } else {
@@ -66,11 +66,10 @@ class CiscomerakiCollector extends PawsCollector {
         }
     }
     
-
     async pawsGetLogs(state, callback) {
         const collector = this;
 
-        const productTypes = JSON.parse(process.env.paws_collector_param_string_1);
+        const productTypes = process.env.paws_collector_param_string_1 ? JSON.parse(process.env.paws_collector_param_string_1) : [];
         if (!productTypes) {
             return callback("The Product Types was not found!");
         }
@@ -85,7 +84,7 @@ class CiscomerakiCollector extends PawsCollector {
         // const url = `api/v1/organizations/${orgKey}/networks`;
         // const networks = await utils.getAllNetworks(url, clientSecret, apiEndpoint);
         // networks.forEach(function (network) {
-        //     state.networkId = network.id;
+        //     state.stream = network.id;
         AlLogger.info(`CMRI000001 Collecting data for NetworkId-${state.stream} from ${state.since}`);
         utils.getAPILogs(apiDetails, [], apiEndpoint, state, clientSecret, process.env.paws_max_pages_per_invocation)
             .then(({ accumulator, nextPage }) => {
@@ -100,16 +99,19 @@ class CiscomerakiCollector extends PawsCollector {
             })
             .catch((error) => {
                 if (error && error.response && error.response.status == 429) {
-                    const retry = parseInt(error.response.headers['retry-after']) || 1;
+                    const maxRandom = 5;
+                    let retry = parseInt(error.response.headers['retry-after']) || 1;
+                    retry += Math.floor(Math.random() * (maxRandom + 1));
                     state.poll_interval_sec = state.poll_interval_sec < MAX_POLL_INTERVAL ?
-                        state.poll_interval_sec + retry : MAX_POLL_INTERVAL;
-                        AlLogger.infor(`CMRI000002 Throttling error, retrying after ${state.poll_interval_sec}`);
+                    parseInt(state.poll_interval_sec) + retry : MAX_POLL_INTERVAL;
+                    AlLogger.info(`CMRI000007 Throttling error, retrying after ${state.poll_interval_sec} sec`);
                     collector.reportApiThrottling(function () {
                         return callback(null, [], state, state.poll_interval_sec);
                     });
                 }
                 // set errorCode if not available in error object to showcase client error on DDMetric
-                else if (error.response && error.response.data) {
+                else if (error && error.response && error.response.data) {
+                    AlLogger.info(`CMRI000003 error ${error.response.data.errors} - status: ${error.response.status}`);
                     error.response.data.errorCode = error.response.status;
                     return callback(error.response.data);
                 }
@@ -141,7 +143,7 @@ class CiscomerakiCollector extends PawsCollector {
         const untilMoment = moment(curState.until);
         const { nextUntilMoment, nextSinceMoment, nextPollInterval } = calcNextCollectionInterval('no-cap', untilMoment, this.pollInterval);
         return {
-            stream: curState.networkId,
+            stream: curState.stream,
             since: nextSinceMoment.toISOString(),
             until: nextUntilMoment.toISOString(),
             nextPage: null,
@@ -157,7 +159,6 @@ class CiscomerakiCollector extends PawsCollector {
             nextPage:null,
             poll_interval_sec: 1
         };
-        console.log('_getNextCollectionStateWithNextPage',JSON.stringify(obj));
         return obj;
     }
 

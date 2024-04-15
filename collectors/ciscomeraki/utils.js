@@ -1,6 +1,4 @@
-const axios = require('axios').create({
-    httpsAgent: new require('https').Agent()
-});
+const axios = require('axios');
 const AlLogger = require('@alertlogic/al-aws-collector-js').Logger;
 
 async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSecret, maxPagesPerInvocation) {
@@ -23,29 +21,34 @@ async function getAPILogs(apiDetails, accumulator, apiEndpoint, state, clientSec
     async function getData(productType) {
         if (pageCount < maxPagesPerInvocation) {
             pageCount++;
-            let url = `https://${apiEndpoint}${apiDetails.url}/${state.stream}/events?productType=${productType}`;
             try {
-                let response = await makeApiCall(url, clientSecret, 500, since);
-                let data = response && response.data ? response.data.events : [];
-                console.log(`networkId->', ${url}, ' productType->', ${productType}, ' events:', ${data.length}, 'pageCount', ${pageCount}`);
-                if (data.length) {
-                    accumulator = accumulator.concat(data);
-                }else{
-                    return accumulator;
+                if (state.stream) {
+                    let url = `https://${apiEndpoint}${apiDetails.url}/${state.stream}/events?productType=${productType}`;
+                    let response = await makeApiCall(url, clientSecret, 500, since);
+                    let data = response && response.data ? response.data.events : [];
+                    AlLogger.debug(`networkId->', ${url}, ' productType->', ${productType}, ' events:', ${data.length}, 'pageCount', ${pageCount}`);
+                    if (data.length) {
+                        accumulator = accumulator.concat(data);
+                    } else {
+                        return accumulator;
+                    }
+                    headers = response.headers;
+                    const linkHeader = response.headers.link;
+                    if (linkHeader && linkHeader.includes('rel=next')) {
+                        const nextLink = linkHeader.match(/<([^>]+)>; rel=next/)[1];
+                        startingAfter = new URL(nextLink).searchParams.get('startingAfter');
+                        since = startingAfter;
+                        await getData(productType);
+                    } else {
+                        AlLogger.debug(`CMRI000006 No More Next Page Data Available`);
+                        state.until = response.data.pageEndAt;
+                    }
                 }
-                headers = response.headers;
-                const linkHeader = response.headers.link;
-                if (linkHeader && linkHeader.includes('rel=next')) {
-                    const nextLink = linkHeader.match(/<([^>]+)>; rel=next/)[1];
-                    startingAfter = new URL(nextLink).searchParams.get('startingAfter');
-                    since = startingAfter;
-                    await getData(productType);
-                } else {
-                    AlLogger.debug(`CMRI000006 No More Next Page Data Available`);
-                    state.until = response.data.pageEndAt;
+                else {
+                    throw new Error(`CMRI000007 Error:NetworkId required in ${url}`);
                 }
             } catch (error) {
-                AlLogger.debug(`CMRI000009 ${error.message}`);
+                throw error;
             }
         } else {
             nextPage = since;
@@ -58,8 +61,8 @@ async function makeApiCall(url, apiKey, perPage, startingAfter = null) {
     if (startingAfter) {
         fullUrl += `&startingAfter=${startingAfter}`;
     }
+    AlLogger.debug(`fullUrl->', ${fullUrl}`);
     try {
-        console.log(fullUrl);
         const response = await axios.get(fullUrl, {
             headers: {
                 'X-Cisco-Meraki-API-Key': apiKey,
@@ -98,6 +101,7 @@ function getAPIDetails(orgKey, productTypes) {
 
 module.exports = {
     getAPIDetails: getAPIDetails,
+    makeApiCall:makeApiCall,
     getAPILogs: getAPILogs,
     getAllNetworks: getAllNetworks
 };

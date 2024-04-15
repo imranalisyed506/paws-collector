@@ -1,9 +1,9 @@
 {
   "Records": [
     {
-      "messageId": "9a1c84f7-f1d2-40d5-9d28-7ad3f16fd587",
+      "messageId": "bcfb1a7f-08ab-4c7c-ade2-a61787a7edab",
       "receiptHandle": "AQEB78LmKaaZ+uj8DVnc/O2zQcAe+qKSi3ZGTSBFssIRSmpwwzUEi2vhPTaIBnhOoh0aoRxVjWdoXO3ZloINfMxmcjycP3KC0WXwcWokoOc3iMCdqhYg0NcOhQW1X0ixc79C9/5/XF1xGd79vLhFL7KvRjjiT4sOaSxlAv6v2fJ5eDETnp7CRa5pocCF4EO2su0M4/TnlLreGfsY+C+/tH+r19AM+d3Jt5dbNMrKMWRRZ7/PTjczkIM7U38AHPuusuBz9uzA5yMQGOMI8FPXfqgcafEN17JqKuNSd/l54v1+s9rBQSzL/MH9wZ0XpZditcpe5pTc+dGuRHOXbFK2A0YUQCvRq1Ed8tfr68uELTQK5jWHH/zPnEMWsTyco9VuNCKr",
-      "body": "{\n  \"priv_collector_state\": {\n \n  \"since\": \"2024-04-01T00:00:00.000Z\",\n    \"until\": \"2024-04-02T13:35:42.740Z\",\n  \"nextPage\": null,\n   \"stream\": \"L_686235993220604684\",\n   \"poll_interval_sec\": 60,\n \"apiQuotaResetDate\": \"2023-07-07T06:27:42.740Z\"  }\n}",
+      "body": "{\n  \"priv_collector_state\": {\n \n  \"since\": \"2024-04-18T16:15:00.000Z\",\n    \"until\": \"2024-04-18T16:35:42.740Z\",\n  \"nextPage\": null,\n   \"stream\": \"L_686235993220604684\",\n   \"poll_interval_sec\": 60,\n \"apiQuotaResetDate\": \"2023-07-07T06:27:42.740Z\"  }\n}",
       "attributes": {
         "ApproximateReceiveCount": "1",
         "SentTimestamp": "1574159909907",
