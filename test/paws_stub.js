@@ -5,7 +5,9 @@ function mock(service, methodName, callback) {
 }
 
 function restore(serviceName, methodName) {
-     serviceName.prototype[methodName].restore();
+    if (serviceName.prototype[methodName] && serviceName.prototype[methodName].restore) {
+        serviceName.prototype[methodName].restore();
+    }
 }
 
 module.exports = {
